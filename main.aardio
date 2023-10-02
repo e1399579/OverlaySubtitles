@@ -1,0 +1,80 @@
+import win.ui;
+import win.ui.menu;
+import win.ui.resizeBorder;
+import sys.monitor;
+
+// 创建窗口
+var monitor = ..sys.monitor.getInfoFromWindow().rcMonitor;
+var width = monitor.right - monitor.left;
+var height = monitor.bottom - monitor.top;
+formWidth = width * 0.7;
+formHeight = height * 0.07;
+mainForm = win.form(
+	text="OverlaySubtitles";
+	right=formWidth;
+	bottom=formHeight;
+	bgcolor=0;
+	border="none";
+	topmost=1;
+);
+mainForm.enableDpiScaling(false);
+mainForm.add();
+
+// 窗口居中
+formX = (width - formWidth) * 0.5;
+formY = (height - formHeight) * 0.9;
+mainForm.setPos(formX, formY);
+
+// 右键菜单
+var options = {};
+function selectOption(id, value) {
+	for (i, v in options) {
+		if (v == id) {
+			mainForm.popmenu.check(v, true, 0/*_MF_BYCOMMAND*/);
+			mainForm.popmenu.enable(v, false, 0/*_MF_BYCOMMAND*/);
+			mainForm.transparent(255 * value);
+		} else {
+			mainForm.popmenu.check(v, false, 0/*_MF_BYCOMMAND*/);
+			mainForm.popmenu.enable(v, true, 0/*_MF_BYCOMMAND*/);
+		}
+	}
+};
+mainForm.popmenu = win.ui.popmenu(mainForm);//创建弹出菜单
+var id1 = mainForm.popmenu.add('100%', function(id) {
+	selectOption(id, 1);
+});
+var id2 = mainForm.popmenu.add('95%', function(id) {
+	selectOption(id, 0.95);
+});
+var id3 = mainForm.popmenu.add('75%', function(id) {
+	selectOption(id, 0.75);
+});
+var id4 = mainForm.popmenu.add('50%', function(id) {
+	selectOption(id, 0.5);
+});
+var id5 = mainForm.popmenu.add('25%', function(id) {
+	selectOption(id, 0.25);
+});
+options = {id1, id2, id3, id4, id5};
+mainForm.popmenu.add();
+mainForm.popmenu.add('Center', function() {
+	var x = (width - mainForm.width) * 0.5;
+	mainForm.setPos(x, mainForm.top);
+});
+mainForm.popmenu.add('Exit', function() {
+	mainForm.close();
+});
+mainForm.popmenu.click(1);
+mainForm.wndproc = function(hwnd,message,wParam,lParam){ 
+	if (message == 0x205/*_WM_RBUTTONUP 鼠标右键弹出菜单*/) {
+		var x, y = ::LOWORD(lParam), ::HIWORD(lParam);
+		mainForm.popmenu.popup(x, y);
+	}
+};
+
+// 移动、调整大小
+mainForm.onMouseDown = mainForm.hitCaption;
+win.ui.resizeBorder(mainForm, 5);
+
+mainForm.show();
+return win.loopMessage();
